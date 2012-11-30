@@ -1,0 +1,218 @@
+<?php
+
+/**
+ * Implements hook_requirements().
+ */
+function leaflet_framework_requirements($phase) {
+  $requirements = array();
+
+  if ($phase == 'runtime' && !file_exists(libraries_get_path('Leaflet') . '/dist/leaflet.js')) {
+    $requirements['leaflet'] = array(
+      'title' => t('Leaflet library not found'),
+      'value' => t('The !leaflet javascript library was not found. Please !download it into the libraries folder.',
+        array(
+          '!leaflet' => l('Leaflet', 'http://leafletjs.com'),
+          '!download' => l('download', 'http://leafletjs.com/download.html'),
+        )
+      ),
+      'severity' => REQUIREMENT_ERROR,
+    );
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_library().
+ */
+function leaflet_framework_library() {
+  $libraries = array();
+
+  $leaflet_path = libraries_get_path('Leaflet');
+  $libraries['Leaflet'] = array(
+    'title' => 'Leaflet',
+    'website' => 'http://leafletjs.com',
+    'version' => '0.4.5',
+    'js' => array(
+      array(
+        'type' => 'file',
+        // 'data' => $leaflet_path . '/dist/leaflet.js',
+        'data' => $leaflet_path . '/dist/leaflet-src.js',
+        // 'data' => $leaflet_path . '/debug/leaflet-include.js',
+        'preprocess' => FALSE
+      ),
+    ),
+    'css' => array(
+      $leaflet_path . '/dist/leaflet.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+      ),
+      $leaflet_path . '/dist/leaflet.ie.css' => array(
+        'type' => 'file',
+        'media' => 'screen',
+        'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE),
+      ),
+    ),
+  );
+
+  $path = drupal_get_path('module', 'leaflet_framework');
+  $libraries['DrupalAttachBehavior'] = array(
+    'title' => 'Attach behavior',
+    'version' => '7.x-1.x',
+    'js' => array(
+      $path . '/js/DrupalAttachBehavior.js' => array(),
+    ),
+    'dependencies' => array(
+      array('leaflet_framework', 'LeafletFramework'),
+    ),
+  );
+
+  $libraries['LeafletFramework'] = array(
+    'title' => 'LeafletFramework',
+    'version' => '7.x-1.x',
+    'js' => array(
+      $path . '/js/LeafletFramework/LeafletFramework.js' => array(),
+      $path . '/js/LeafletFramework/Util.js' => array(),
+      $path . '/js/LeafletFramework/Plugin.js' => array(),
+      $path . '/js/LeafletFramework/Core.js' => array(),
+    ),
+    'dependencies' => array(
+      array('leaflet_framework', 'Leaflet'),
+    ),
+  );
+
+  $libraries['LayersPlugin'] = array(
+    'title' => 'LayersPlugin',
+    'version' => '7.x-1.x',
+    'js' => array(
+      $path . '/js/LeafletFramework/Handlers/Layers.js' => array(),
+      $path . '/js/LeafletFramework/Plugins/LayersPlugin.js' => array(),
+    ),
+    'dependencies' => array(
+       array('leaflet_framework', 'LeafletFramework'),
+    ),
+  );
+
+  $libraries['ViewPlugin'] = array(
+    'title' => 'ViewPlugin',
+    'version' => '7.x-1.x',
+    'js' => array(
+      $path . '/js/LeafletFramework/Handlers/View.js' => array(),
+      $path . '/js/LeafletFramework/Plugins/ViewPlugin.js' => array(),
+    ),
+    'dependencies' => array(
+      array('leaflet_framework', 'LeafletFramework'),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function leaflet_framework_theme($existing, $type, $theme, $path) {
+  return array(
+    'lf_map' => array(
+      'variables' => array('map_id' => NULL, 'height' => '550px'),
+      'template' => 'lf_map',
+    ),
+  );
+}
+
+/**
+ * Implements hook_leaflet_framework_plugin().
+ */
+function leaflet_framework_leaflet_framework_plugin() {
+  $plugins = array();
+
+  /* Default layers plugin.
+   * - Adds layers to a map as either base layers or overlays.
+   * - Adds an optional layer switcher control to the map.
+   */
+  $plugins['lf_layers'] = array(
+    'library' => array('leaflet_framework', 'LayersPlugin'),
+    'logical' => 'LF.Plugin.Layers',
+    'switcher' => array('position' => 'topright'),
+    'layers' => array(
+      array(
+        'title' => 'OSM',
+        'url' => 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'type' => 'base',
+      ),
+    ),
+  );
+
+  /* Default map view plugin.
+   * - Sets map center and zoom level.
+   */
+  $plugins['lf_view'] = array(
+    'library' => array('leaflet_framework', 'ViewPlugin'),
+    'logical' => 'LF.Plugin.View',
+    'center' => array(0.0, 0.0),
+    'zoom' => 3,
+  );
+
+  return $plugins;
+}
+
+/**
+ * Get a plugin
+ * Declares: hook_leaflet_framework_plugin().
+ */
+function leaflet_framework_plugin($name = NULL) {
+  $plugins = module_invoke_all('leaflet_framework_plugin');
+
+  // TODO: Add caching here.
+
+  return !empty($name) ? (isset($plugins[$name]) ? $plugins[$name] : FALSE) : $plugins;
+}
+
+/**
+ * Create a Leaflet map.
+ */
+function leaflet_framework_map($id, $plugins = NULL, $height = '550px') {
+
+  // Use default plugins & settings if none are provided.
+  if (is_null($plugins)) {
+    $plugins['lf_layers'] = array();
+    $plugins['lf_view'] = array();
+  }
+
+  foreach ($plugins as $name => $options) {
+    leaflet_framework_extend_map($name, $id, $options);
+  }
+
+  return array(
+    '#attached' => array(
+      'library' => array(
+        array('leaflet_framework', 'DrupalAttachBehavior'),
+      ),
+      'js' =>  array(
+        array('data' => array(
+          'leaflet_framework' => array($id => array()),
+        ), 'type' => 'setting'),
+      ),
+    ),
+    '#theme' => 'lf_map',
+    '#map_id' => $id,
+    '#height' => $height,
+  );
+}
+
+/**
+ * Register additional plugins against a specific map.
+ */
+function leaflet_framework_extend_map($name, $map_id, $options = array()) {
+  $plugin = leaflet_framework_plugin($name);
+  $library = $plugin['library'];
+  unset($plugin['library']);
+
+  drupal_add_library($library[0], $library[1]);
+
+  drupal_add_js(array('leaflet_framework' => array(
+    $map_id => array(
+      $name => array_merge($plugin, $options)
+    )
+  )), 'setting');
+}

@@ -1,0 +1,102 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function leaflet_framework_examples_menu() {
+  $items = array();
+
+  $items['lf-map/default'] = array(
+    'title' => 'Leaflet Framework examples: Default map',
+    'description' => '',
+    'page callback' => 'leaflet_framework_examples_default',
+    'access arguments' => array('access site content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'leaflet_framework_examples.pages.inc',
+  );
+  $items['lf-map/custom'] = array(
+    'title' => 'Leaflet Framework examples: Custom map',
+    'description' => '',
+    'page callback' => 'leaflet_framework_examples_custom',
+    'access arguments' => array('access site content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'leaflet_framework_examples.pages.inc',
+  );
+  $items['lf-map/empty'] = array(
+    'title' => 'Leaflet Framework examples: Empty map',
+    'description' => '',
+    'page callback' => 'leaflet_framework_examples_empty',
+    'access arguments' => array('access site content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'leaflet_framework_examples.pages.inc',
+  );
+  $items['lf-map/custom-extended'] = array(
+    'title' => 'Leaflet Framework examples: Extended custom map',
+    'description' => '',
+    'page callback' => 'leaflet_framework_examples_custom_extended',
+    'access arguments' => array('access site content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'leaflet_framework_examples.pages.inc',
+  );
+  $items['lf-map/external-plugin'] = array(
+    'title' => 'Leaflet Framework examples: External plugin',
+    'description' => '',
+    'page callback' => 'leaflet_framework_examples_external_plugin',
+    'access arguments' => array('access site content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'leaflet_framework_examples.pages.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_library().
+ */
+function leaflet_framework_examples_library() {
+  $libraries = array();
+  $path = drupal_get_path('module', 'leaflet_framework_examples');
+  $leaflet_hash_path = libraries_get_path('leaflet-hash');
+
+  $libraries['header'] = array(
+    'title' => 'Leaflet Framework examples header file',
+    'version' => '7.x-1.0',
+    'js' => array(
+      $path . '/js/Header.js' => array(),
+    ),
+    'dependencies' => array(
+      array('leaflet_framework', 'LeafletFramework'),
+    ),
+  );
+
+  $libraries['leaflet-hash'] = array(
+    'title' => 'Leaflet-hash',
+    'version' => '1.0',
+    'js' => array(
+      $leaflet_hash_path . '/leaflet-hash.js' => array(),
+      $path . '/js/Plugins/Hash.js' => array(),
+    ),
+    'dependencies' => array(
+      array('leaflet_framework_examples', 'header'),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Implements hook_leaflet_framework_plugin().
+ */
+function leaflet_framework_examples_leaflet_framework_plugin() {
+  $plugins = array();
+
+  // Leaflet-hash plugin (https://github.com/mlevans/leaflet-hash/network).
+  $plugins['hash'] = array(
+    'library' => array('leaflet_framework_examples', 'leaflet-hash'),
+    'logical' => 'LFE.Plugin.Hash',
+    'center' => array(0.0, 0.0),
+    'zoom' => 5,
+  );
+
+  return $plugins;
+}

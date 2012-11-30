@@ -1,0 +1,6 @@
+name = Leaflet Framework Examples
+description = ""
+core = 7.x
+package = Leaflet Framework
+
+dependencies[] = leaflet_framework

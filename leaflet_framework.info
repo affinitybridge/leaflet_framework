@@ -1,0 +1,7 @@
+name = Leaflet Framework
+description = ""
+core = 7.x
+package = Leaflet Framework
+
+dependencies[] = geofield
+dependencies[] = libraries
