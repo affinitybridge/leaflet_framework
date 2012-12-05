@@ -3,7 +3,7 @@ LF.Plugin.View = LF.Plugin.extend({
         return [LF.Handler.View];
     },
 
-    enable: function (view) {
+    enable: function (map, view) {
         var center = this.options.center,
             zoom = this.options.zoom;
 

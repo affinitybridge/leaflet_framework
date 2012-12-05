@@ -22,8 +22,13 @@ LF.Core = L.Class.extend({
 
             this._registry[name] = {
                 plugin: plugin,
-                handlers: this._initHandlers(name, plugin.requireHandlers()),
-            };
+            }
+            if ('requireHandlers' in plugin) {
+                this._registry[name].handlers = this._initHandlers(name, plugin.requireHandlers());
+            }
+            if ('listeners' in plugin) {
+                this._registry[name].listeners = this._bindPluginListeners(plugin.listeners());
+            }
         }
 
         this._initPlugins();
@@ -39,12 +44,22 @@ LF.Core = L.Class.extend({
         return handlers;
     },
 
+    _bindEvents: function (listeners) {
+        this._map.on(listeners);
+        return listeners;
+    },
+
     _initPlugins: function () {
-        var plugin, handlers;
+        var plugin, args = [this._map];
+
         for (var name in this._registry) {
             plugin = this._registry[name].plugin;
-            handlers = this._registry[name].handlers;
-            plugin.enable.apply(plugin, handlers);
+
+            if ('handlers' in this._registry[name]) {
+                args = args.concat(this._registry[name].handlers);
+            }
+
+            plugin.enable.apply(plugin, args);
         }
     }
 

@@ -121,9 +121,24 @@ function leaflet_framework_theme($existing, $type, $theme, $path) {
 }
 
 /**
+ * Implements hook_leaflet_framework_maps().
+ */
+function leaflet_framework_leaflet_framework_maps() {
+  return array(
+    'default' => array(
+      'title' => 'Map',
+      'plugins' => array(
+        'lf_layers' => array(),
+        'lf_view' => array(),
+      ),
+    ),
+  );
+}
+
+/**
  * Implements hook_leaflet_framework_plugin().
  */
-function leaflet_framework_leaflet_framework_plugin() {
+function leaflet_framework_leaflet_framework_plugins() {
   $plugins = array();
 
   /* Default layers plugin.
@@ -157,27 +172,52 @@ function leaflet_framework_leaflet_framework_plugin() {
 }
 
 /**
+ * Get a map definition.
+ * Declares: hook_leaflet_framework_maps().
+ */
+function leaflet_framework_maps($name = NULL) {
+
+  // TODO: Add caching here.
+
+  $maps = module_invoke_all('leaflet_framework_maps');
+
+  if (empty($name)) {
+    return $maps;
+  }
+
+  return isset($maps[$name]) ? $maps[$name] : FALSE;
+}
+
+/**
  * Get a plugin
  * Declares: hook_leaflet_framework_plugin().
  */
 function leaflet_framework_plugin($name = NULL) {
-  $plugins = module_invoke_all('leaflet_framework_plugin');
 
   // TODO: Add caching here.
 
-  return !empty($name) ? (isset($plugins[$name]) ? $plugins[$name] : FALSE) : $plugins;
+  $plugins = module_invoke_all('leaflet_framework_plugins');
+
+  if (empty($name)) {
+    return $plugins;
+  }
+
+  return isset($plugins[$name]) ? $plugins[$name] : FALSE;
 }
 
 /**
  * Create a Leaflet map.
  */
-function leaflet_framework_map($id, $plugins = NULL, $height = '550px') {
+function leaflet_framework_map($id = 'default', $plugins = array(), $height = '550px') {
 
-  // Use default plugins & settings if none are provided.
-  if (is_null($plugins)) {
-    $plugins['lf_layers'] = array();
-    $plugins['lf_view'] = array();
+  $map = leaflet_framework_maps($id);
+
+  // Use default map plugins if no none are provided.
+  if (!$map && empty($plugins)) {
+    $map = leaflet_framework_maps('default');
   }
+
+  $plugins = array_merge($map['plugins'], $plugins);
 
   foreach ($plugins as $name => $options) {
     leaflet_framework_extend_map($name, $id, $options);
