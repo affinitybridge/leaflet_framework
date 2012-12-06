@@ -11,14 +11,14 @@ LF.Core = L.Class.extend({
         // The registry stores all plugins enabled on this map.
         this._registry = {};
 
-        var name, constructor, plugin, options;
+        var name, ctor, plugin, options;
         // Create plugins and register them with the core.
         for (var i = 0, len = plugins.length; i < len; i++) {
             name = plugins[i][0];
-            constructor = plugins[i][1];
+            ctor = plugins[i][1];
             options = plugins[i][2];
 
-            plugin = new constructor(options);
+            plugin = new ctor(options);
 
             this._registry[name] = {
                 plugin: plugin,
