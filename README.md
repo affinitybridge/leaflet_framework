@@ -4,6 +4,7 @@ functionality using [Leaflet].
 
 ## API:
 
+```
 hook_leafet_framework_maps() -> array()
     Implementing modules return array of map definitions (the plugins and config used to create the map).
     Map definitions:
@@ -18,10 +19,11 @@ hook_leaflet_framework_plugins() -> array()
           - the entry point is a globally visible function
           - the 'logical' name is the function's absolute namespace as a string.
         - provide default configuration values.
-        
+
 leaflet_framework_map($map_id, $plugins => NULL, $height = '550px') -> renderable array()
 
 leaflet_framework_extend_map($plugin, $map_id, $options = array()) -> null
+```
 
 [Drupal]: http://drupal.org
 [Leaflet]: http://leafletjs.com
