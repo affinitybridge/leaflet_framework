@@ -4,7 +4,7 @@ LF.Plugin.Layers = LF.Plugin.extend({
         return [LF.Handler.Layers];
     },
 
-    enable: function (layers) {
+    enable: function (map, layers) {
         var i, definition, layer;
 
         if (this.options.switcher) {

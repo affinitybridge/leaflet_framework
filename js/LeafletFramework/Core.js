@@ -50,9 +50,10 @@ LF.Core = L.Class.extend({
     },
 
     _initPlugins: function () {
-        var plugin, args = [this._map];
+        var plugin, args;
 
         for (var name in this._registry) {
+            args = [this._map];
             plugin = this._registry[name].plugin;
 
             if ('handlers' in this._registry[name]) {

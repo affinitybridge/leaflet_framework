@@ -7,7 +7,7 @@ function leaflet_framework_requirements($phase) {
   $requirements = array();
 
   if ($phase == 'runtime' && !file_exists(libraries_get_path('Leaflet') . '/dist/leaflet.js')) {
-    $requirements['leaflet'] = array(
+    $requirements['leaflet_framework'] = array(
       'title' => t('Leaflet library not found'),
       'value' => t('The !leaflet javascript library was not found. Please !download it into the libraries folder.',
         array(
@@ -23,37 +23,55 @@ function leaflet_framework_requirements($phase) {
 }
 
 /**
+ * Implements hook_libraries_info().
+ */
+function leaflet_framework_libraries_info() {
+  return array(
+    'leaflet' => array(
+      'name' => 'Leaflet',
+      'vendor url' => 'https://github.com/affinitybridge/leaflet_framework',
+      'download url' => 'git@github.com:affinitybridge/leaflet_framework.git',
+      'path' => 'dist',
+      'version' => '0.5.1',
+      'files' => array(
+        'js' => array(
+          'leaflet-src.js',
+        ),
+        'css' => array(
+          'leaflet.css' => array(),
+          'leaflet.ie.css' => array(
+            'type' => 'file',
+            'media' => 'screen',
+            'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
  * Implements hook_library().
  */
 function leaflet_framework_library() {
   $libraries = array();
 
-  $leaflet_path = libraries_get_path('Leaflet');
-  $libraries['Leaflet'] = array(
-    'title' => 'Leaflet',
-    'website' => 'http://leafletjs.com',
-    'version' => '0.4.5',
-    'js' => array(
-      array(
-        'type' => 'file',
-        // 'data' => $leaflet_path . '/dist/leaflet.js',
-        'data' => $leaflet_path . '/dist/leaflet-src.js',
-        // 'data' => $leaflet_path . '/debug/leaflet-include.js',
-        'preprocess' => FALSE
-      ),
-    ),
-    'css' => array(
-      $leaflet_path . '/dist/leaflet.css' => array(
-        'type' => 'file',
-        'media' => 'screen',
-      ),
-      $leaflet_path . '/dist/leaflet.ie.css' => array(
-        'type' => 'file',
-        'media' => 'screen',
-        'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE),
-      ),
-    ),
-  );
+  $leaflet = libraries_detect('leaflet');
+  if ($leaflet) {
+    $path = "{$leaflet['library path']}/{$leaflet['path']}";
+
+    foreach ($leaflet['files'] as $type => $files) {
+      $definition = array();
+      foreach ($files as $file_name => $opts) {
+        $definition["$path/$file_name"] = $opts;
+      }
+      $leaflet[$type] = $definition;
+    }
+
+    $leaflet['title'] = $leaflet['name'];
+
+    $libraries['Leaflet'] = $leaflet;
+  }
 
   $path = drupal_get_path('module', 'leaflet_framework');
   $libraries['DrupalAttachBehavior'] = array(
