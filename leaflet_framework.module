@@ -58,22 +58,11 @@ function leaflet_framework_library() {
 
   $leaflet = libraries_detect('leaflet');
   if ($leaflet) {
-    $path = "{$leaflet['library path']}/{$leaflet['path']}";
-
-    foreach ($leaflet['files'] as $type => $files) {
-      $definition = array();
-      foreach ($files as $file_name => $opts) {
-        $definition["$path/$file_name"] = $opts;
-      }
-      $leaflet[$type] = $definition;
-    }
-
-    $leaflet['title'] = $leaflet['name'];
-
-    $libraries['Leaflet'] = $leaflet;
+    $libraries['Leaflet'] = leaflet_framework_convert_libraries($leaflet);
   }
 
   $path = drupal_get_path('module', 'leaflet_framework');
+
   $libraries['DrupalAttachBehavior'] = array(
     'title' => 'Attach behavior',
     'version' => '7.x-1.x',
@@ -124,6 +113,26 @@ function leaflet_framework_library() {
   );
 
   return $libraries;
+}
+
+/**
+ * Converts a Libraries module 2.x library definition to a version compatible
+ * with core's hook_library().
+ */
+function leaflet_framework_convert_libraries($library) {
+  $path = "{$library['library path']}/{$library['path']}";
+
+  foreach ($library['files'] as $type => $files) {
+    $definition = array();
+    foreach ($files as $file_name => $opts) {
+      $definition["$path/$file_name"] = $opts;
+    }
+    $library[$type] = $definition;
+  }
+
+  $library['title'] = $library['name'];
+
+  return $library;
 }
 
 /**
