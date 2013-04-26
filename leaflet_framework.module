@@ -59,6 +59,13 @@ function leaflet_framework_library() {
   $leaflet = libraries_detect('leaflet');
   if ($leaflet) {
     $libraries['Leaflet'] = leaflet_framework_convert_libraries($leaflet);
+    $leaflet_path = base_path() . libraries_get_path('leaflet');
+    $libraries['Leaflet']['js'][] = array(
+      'type' => 'inline',
+      'data' => "L.Icon.Default.imagePath = '$leaflet_path/dist/images';",
+      'group' => JS_LIBRARY,
+      'preprocess' => FALSE
+    );
   }
 
   $path = drupal_get_path('module', 'leaflet_framework');
