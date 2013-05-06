@@ -127,7 +127,10 @@ function leaflet_framework_library() {
  * with core's hook_library().
  */
 function leaflet_framework_convert_libraries($library) {
-  $path = "{$library['library path']}/{$library['path']}";
+  $path = "{$library['library path']}";
+  if (isset($library['path'])) {
+    $path .= "/{$library['path']}";
+  }
 
   foreach ($library['files'] as $type => $files) {
     $definition = array();

@@ -5,5 +5,8 @@ LF.Handler.View = L.Handler.extend({
 
     set: function (center, zoom) {
         this._map.setView(center, zoom);
+    },
+    fit: function (bounds) {
+        this._map.fitBounds(bounds);
     }
 });

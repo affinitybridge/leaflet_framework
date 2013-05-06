@@ -27,7 +27,7 @@ LF.Core = L.Class.extend({
                 this._registry[name].handlers = this._initHandlers(name, plugin.requireHandlers());
             }
             if ('listeners' in plugin) {
-                this._registry[name].listeners = this._bindPluginListeners(plugin.listeners());
+                this._registry[name].listeners = this._bindEvents(plugin.listeners());
             }
         }
 
