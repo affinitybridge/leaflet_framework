@@ -119,6 +119,17 @@ function leaflet_framework_library() {
     ),
   );
 
+  $libraries['ScalePlugin'] = array(
+    'title' => 'ScalePlugin',
+    'version' => '7.x-1.x',
+    'js' => array(
+      $path . '/js/LeafletFramework/Plugins/ScalePlugin.js' => array(),
+    ),
+    'dependencies' => array(
+      array('leaflet_framework', 'LeafletFramework'),
+    ),
+  );
+
   return $libraries;
 }
 
@@ -203,6 +214,14 @@ function leaflet_framework_leaflet_framework_plugins() {
     'logical' => 'LF.Plugin.View',
     'center' => array(0.0, 0.0),
     'zoom' => 3,
+  );
+
+  /* Default map scale plugin.
+   * - Adds the Leaflet scale control to a map.
+   */
+  $plugins['lf_scale'] = array(
+    'library' => array('leaflet_framework', 'ScalePlugin'),
+    'logical' => 'LF.Plugin.Scale',
   );
 
   return $plugins;
