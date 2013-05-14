@@ -301,6 +301,8 @@ function leaflet_framework_map($id = 'default', $plugins = array(), $height = '5
  */
 function leaflet_framework_extend_map($name, $map_id, $options = array()) {
   $plugin = leaflet_framework_plugin($name);
+  if (empty($plugin)) return;
+
   $library = $plugin['library'];
   unset($plugin['library']);
 
@@ -316,7 +318,9 @@ function leaflet_framework_extend_map($name, $map_id, $options = array()) {
 
   drupal_add_library($library[0], $library[1]);
 
-  drupal_add_js(array('leaflet_framework' => array(
-    $map_id => array($name => $options),
-  )), 'setting');
+  if (!empty($options) && isset($options['logical'])) {
+    drupal_add_js(array('leaflet_framework' => array(
+      $map_id => array($name => $options),
+    )), 'setting');
+  }
 }
