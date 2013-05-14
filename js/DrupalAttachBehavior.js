@@ -7,15 +7,16 @@ Drupal.behaviors.leaflet_framework = {
 }
 
 function attach(context, settings) {
-    var plugin_registry;
+    var defaults, plugin_registry;
 
     for (var id in settings.leaflet_framework) {
-        plugin_registry = settings.leaflet_framework[id];
-        prepare(id, plugin_registry);
+        defaults = settings.leaflet_framework[id].defaults;
+        plugin_registry = settings.leaflet_framework[id].plugins;
+        prepare(id, plugin_registry, defaults);
     }
 }
 
-function prepare(id, plugin_registry) {
+function prepare(id, plugin_registry, defaults) {
     var logical, plugin, args,
         plugins = [];
 
@@ -32,7 +33,7 @@ function prepare(id, plugin_registry) {
     }
 
     $('#' + id).once(id, function() {
-        Drupal.leaflet_framework[id] = new LF.Core(this, plugins)
+        Drupal.leaflet_framework[id] = new LF.Core(this, plugins, defaults)
     });
 }
 

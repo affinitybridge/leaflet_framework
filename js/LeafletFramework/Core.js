@@ -3,10 +3,10 @@
  */
 LF.Core = L.Class.extend({
 
-    initialize: function (container, plugins) {
+    initialize: function (container, plugins, defaults) {
         // Starting with an empty map, plugins will attach handlers to
         // configure and build extend this map.
-        this._map = L.map(container);
+        this._map = L.map(container, defaults);
 
         // The registry stores all plugins enabled on this map.
         this._registry = {};

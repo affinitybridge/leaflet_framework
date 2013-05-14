@@ -20,7 +20,7 @@ hook_leaflet_framework_plugins() -> array()
           - the 'logical' name is the function's absolute namespace as a string.
         - provide default configuration values.
 
-leaflet_framework_map($map_id, $plugins => NULL, $height = '550px') -> renderable array()
+leaflet_framework_map($map_id, $plugins => NULL, $defaults = array()) -> renderable array()
 
 leaflet_framework_extend_map($plugin, $map_id, $options = array()) -> null
 ```

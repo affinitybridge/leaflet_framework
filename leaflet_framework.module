@@ -175,6 +175,9 @@ function leaflet_framework_leaflet_framework_maps() {
   return array(
     'default' => array(
       'title' => 'Map',
+      'defaults' => array(
+        'height' => '550px'
+      ),
       'plugins' => array(
         'lf_layers' => array(),
         'lf_view' => array(),
@@ -237,6 +240,11 @@ function leaflet_framework_maps($name = NULL) {
 
   $maps = module_invoke_all('leaflet_framework_maps');
 
+  foreach ($maps as &$map) {
+    $map['defaults'] = isset($map['defaults']) ? $map['defaults'] : array();
+    $map['plugins'] = isset($map['plugins']) ? $map['plugins'] : array();
+  }
+
   if (empty($name)) {
     return $maps;
   }
@@ -264,15 +272,15 @@ function leaflet_framework_plugin($name = NULL) {
 /**
  * Create a Leaflet map.
  */
-function leaflet_framework_map($id = 'default', $plugins = array(), $height = '550px') {
-
+function leaflet_framework_map($id = 'default', $plugins = array(), $defaults = array()) {
   $map = leaflet_framework_maps($id);
 
   // Use default map plugins if no none are provided.
-  if (!$map && empty($plugins)) {
+  if (!$map) {
     $map = leaflet_framework_maps('default');
   }
 
+  $defaults = array_merge($map['defaults'], $defaults);
   $plugins = array_merge($map['plugins'], $plugins);
 
   foreach ($plugins as $name => $options) {
@@ -286,13 +294,15 @@ function leaflet_framework_map($id = 'default', $plugins = array(), $height = '5
       ),
       'js' =>  array(
         array('data' => array(
-          'leaflet_framework' => array($id => array()),
+          'leaflet_framework' => array($id => array(
+            'defaults' => $defaults,
+            'plugins' => array()
+          )),
         ), 'type' => 'setting'),
       ),
     ),
     '#theme' => 'lf_map',
-    '#map_id' => $id,
-    '#height' => $height,
+    '#map_id' => $id
   );
 }
 
@@ -320,7 +330,9 @@ function leaflet_framework_extend_map($name, $map_id, $options = array()) {
 
   if (!empty($options) && isset($options['logical'])) {
     drupal_add_js(array('leaflet_framework' => array(
-      $map_id => array($name => $options),
+      $map_id => array(
+        'plugins' => array($name => $options),
+      ),
     )), 'setting');
   }
 }
