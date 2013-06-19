@@ -31,9 +31,7 @@ LF.Util = {
 }
 
 LF.Util.Factory = L.Class.extend({
-    options: {
-        type: undefined,
-    },
+    type: undefined,
 
     initialize: function (options) {
         L.setOptions(this, options);
@@ -45,7 +43,7 @@ LF.Util.Factory = L.Class.extend({
             return factory.apply(this, Array.prototype.splice.call(arguments, 1));
         }
         else {
-            throw new Error('Unknown "' + this.options.type + '" factory provider: ' + provider);
+            throw new Error('Unknown "' + this.type + '" factory provider: ' + provider);
         }
     }
 });

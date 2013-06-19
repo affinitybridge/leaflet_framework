@@ -262,6 +262,8 @@ function leaflet_framework_plugin($name = NULL) {
 
   $plugins = module_invoke_all('leaflet_framework_plugins');
 
+  drupal_alter('leaflet_framework_plugins', $plugins);
+
   if (empty($name)) {
     return $plugins;
   }
@@ -320,10 +322,11 @@ function leaflet_framework_extend_map($name, $map_id, $options = array()) {
 
   // Give the module declaring the plugin a final say on the options passed 
   // into it.
-  if (isset($plugin['preprocess callback']) && function_exists($plugin['preprocess callback'])) {
-    $preprocess = $plugin['preprocess callback'];
-    unset($plugin['preprocess callback']);
-    $preprocess($options);
+  if (isset($plugin['preprocess callbacks']) && !empty($plugin['preprocess callbacks'])) {
+    foreach ($plugin['preprocess callbacks'] as $preprocess) {
+      $preprocess($options);
+    }
+    unset($plugin['preprocess callbacks']);
   }
 
   drupal_add_library($library[0], $library[1]);

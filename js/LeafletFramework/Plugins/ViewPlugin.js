@@ -4,6 +4,10 @@ LF.Plugin.View = LF.Plugin.extend({
     },
 
     enable: function (map, view) {
+        if (this.options.maxZoom) {
+            map.options.maxZoom = this.options.maxZoom;
+        }
+
         if ('auto' in this.options) {
             var extent = this.options.auto;
             view.fit([
@@ -16,5 +20,9 @@ LF.Plugin.View = LF.Plugin.extend({
                 zoom = this.options.zoom;
             view.set(center, zoom);
         }
+
+        map.on('popupopen', function (e) {
+            Drupal.attachBehaviors();
+        });
     }
 });
