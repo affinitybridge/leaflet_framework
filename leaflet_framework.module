@@ -303,6 +303,7 @@ function leaflet_framework_map($id = 'default', $plugins = array(), $defaults = 
         ), 'type' => 'setting'),
       ),
     ),
+    '#height' => $defaults['height'],
     '#theme' => 'lf_map',
     '#map_id' => $id
   );
