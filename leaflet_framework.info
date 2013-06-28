@@ -4,3 +4,7 @@ core = 7.x
 package = Leaflet Framework
 
 dependencies[] = libraries
+
+files[] = includes/MapManager.php
+files[] = includes/Map.php
+files[] = includes/Plugin.php

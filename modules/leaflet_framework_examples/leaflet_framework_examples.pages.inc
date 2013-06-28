@@ -22,50 +22,37 @@ function leaflet_framework_examples_default() {
 function leaflet_framework_examples_custom() {
   return array(
     'map' => leaflet_framework_map('example_map_custom', array(
-      'lf_layers' => array(
+      'layers' => array(
         'switcher' => array('position' => 'bottomleft'),
         'layers' => array(
           array(
-            'title' => 'Bing - Hybrid',
+            'title' => 'Terrain',
             'type' => 'base',
-            'url' => 'http://tiles.local/bing--hybrid/{z}/{x}/{y}.png',
-          ),
-          array(
-            'title' => 'Color 1',
-            'type' => 'base',
-            'url' => 'http://tiles.local/colors-1/{z}/{x}/{y}.png',
+            'url' => 'http://{s}.tile.stamen.com/terrain/{z}/{x}/{y}.jpg',
             'disabled' => TRUE,
           ),
           array(
-            'title' => 'Color 2',
+            'title' => 'Watercolor',
             'type' => 'base',
-            'url' => 'http://tiles.local/colors-2/{z}/{x}/{y}.png',
+            'url' => 'http://{s}.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg',
             'disabled' => TRUE,
           ),
           array(
-            'title' => 'BCOGC Roads - Jan, 2011',
-            'type' => 'overlay',
-            'url' => 'http://tiles.local/bcogc-roads-2011-1/{z}/{x}/{y}.png',
+            'title' => 'Toner',
+            'type' => 'base',
+            'url' => 'http://{s}.tile.stamen.com/toner/{z}/{x}/{y}.jpg',
+            'disabled' => TRUE,
           ),
         ),
       ),
-      'lf_view' => array(
-        'center' => array(59.274, -121.832),
+      'view' => array(
+        'center' => array(
+          'lat' => 45.274,
+          'lon' => -121.832
+        ),
         'zoom' => 8,
       ),
     )),
-  );
-}
-
-/**
- * Page callback for 'Empty map' example.
- *
- * An empty map can be created without any defaults by passing an empty array
- * to the plugins parameter.
- */
-function leaflet_framework_examples_empty() {
-  return array(
-    'map' => leaflet_framework_map('example_map_empty', array()),
   );
 }
 
@@ -80,33 +67,41 @@ function leaflet_framework_examples_empty() {
  * 'lf_layers' plugin's configuration.
  */
 function leaflet_framework_examples_custom_extended() {
-  // Add the 'lf_view' and 'lf_layers' plugins to the 'custom_extended' map.
-  leaflet_framework_extend_map('lf_view', 'custom_extended');
-  leaflet_framework_extend_map('lf_layers', 'custom_extended', array(
+  // Create a map and add some plugins.
+  $map = new Map();
+  $map->addPlugin('view', leaflet_framework_plugin('lf_view'))
+      ->addPlugin('layers', leaflet_framework_plugin('lf_layers', array(
+        'switcher' => array('position' => 'bottomleft'),
+      )));
+
+  // Register the map.
+  MapManager::register('custom_extended', $map);
+
+  // Extend map anywhere by referring to it by the name you registered.
+  leaflet_framework_extend_map('layers', 'custom_extended', array(
     'layers' => array(
       array(
-        'title' => 'Bing - Hybrid',
+        'title' => 'Toner',
         'type' => 'base',
-        'url' => 'http://tiles.local/bing--hybrid/{z}/{x}/{y}.png',
+        'url' => 'http://{s}.tile.stamen.com/toner/{z}/{x}/{y}.jpg',
       ),
     ),
   ));
 
-  // Extend the 'lf_layers' plugin configuration by disabling the layer
-  // switcher and adding a new layer.
-  leaflet_framework_extend_map('lf_layers', 'custom_extended', array(
-    'switcher' => FALSE,
+  // Extend map again.
+  leaflet_framework_extend_map('layers', 'custom_extended', array(
     'layers' => array(
       array(
-        'title' => 'BCOGC Roads - Jan, 2011',
-        'type' => 'overlay',
-        'url' => 'http://tiles.local/bcogc-roads-2011-1/{z}/{x}/{y}.png',
+        'title' => 'Watercolor',
+        'type' => 'base',
+        'url' => 'http://{s}.tile.stamen.com/watercolor/{z}/{x}/{y}.jpg',
+        'disabled' => TRUE,
       ),
     ),
   ));
 
-  // Create the 'custom_extended' map as an empty map.
-  return leaflet_framework_map('custom_extended', array());
+  // Queue map for rendering.
+  return leaflet_framework_map('custom_extended');
 }
 
 /**
@@ -116,7 +111,11 @@ function leaflet_framework_examples_custom_extended() {
  * third-party Leaflet-hash Leaflet plugin. 
  */
 function leaflet_framework_examples_external_plugin() {
-  leaflet_framework_extend_map('hash', 'external_plugin');
-  leaflet_framework_extend_map('lf_layers', 'external_plugin');
-  return leaflet_framework_map('external_plugin', array());
+  $map = new Map();
+  $map->addPlugin('hash', leaflet_framework_plugin('hash'))
+      ->addPlugin('layers', leaflet_framework_plugin('lf_layers'));
+
+  MapManager::register('external_plugin', $map);
+
+  return leaflet_framework_map('external_plugin');
 }

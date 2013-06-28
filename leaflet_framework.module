@@ -23,6 +23,15 @@ function leaflet_framework_requirements($phase) {
 }
 
 /**
+ * Implements hook_init().
+ */
+function leaflet_framework_init() {
+  foreach (leaflet_framework_maps() as $id => $map) {
+    MapManager::register($id, $map);
+  }
+}
+
+/**
  * Implements hook_libraries_info().
  */
 function leaflet_framework_libraries_info() {
@@ -169,25 +178,26 @@ function leaflet_framework_theme($existing, $type, $theme, $path) {
 }
 
 /**
- * Implements hook_leaflet_framework_maps().
+ * Drupal template preprocess function.
  */
-function leaflet_framework_leaflet_framework_maps() {
-  return array(
-    'default' => array(
-      'title' => 'Map',
-      'defaults' => array(
-        'height' => '550px'
-      ),
-      'plugins' => array(
-        'lf_layers' => array(),
-        'lf_view' => array(),
-      ),
-    ),
-  );
+function leaflet_framework_preprocess_lf_map($vars) {
+  $map_id = $vars['map_id'];
+  $map = MapManager::get($map_id);
+  _leaflet_framework_flush_extensions($map_id, $map);
 }
 
 /**
- * Implements hook_leaflet_framework_plugin().
+ * Create a new map with default settings & plugins.
+ */
+function leaflet_framework_default_map() {
+  $default = new Map(array('height' => '550px'));
+  $default->addPlugin('layers', leaflet_framework_plugin('lf_layers'))
+          ->addPlugin('view', leaflet_framework_plugin('lf_view'));
+  return $default;
+}
+
+/**
+ * Implements hook_leaflet_framework_plugins().
  */
 function leaflet_framework_leaflet_framework_plugins() {
   $plugins = array();
@@ -199,12 +209,14 @@ function leaflet_framework_leaflet_framework_plugins() {
   $plugins['lf_layers'] = array(
     'library' => array('leaflet_framework', 'LayersPlugin'),
     'logical' => 'LF.Plugin.Layers',
-    'switcher' => array('position' => 'topright'),
-    'layers' => array(
-      array(
-        'title' => 'OSM',
-        'url' => 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-        'type' => 'base',
+    'defaults' => array(
+      'switcher' => array('position' => 'topright'),
+      'layers' => array(
+        array(
+          'title' => 'OSM',
+          'url' => 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+          'type' => 'base',
+        ),
       ),
     ),
   );
@@ -215,8 +227,14 @@ function leaflet_framework_leaflet_framework_plugins() {
   $plugins['lf_view'] = array(
     'library' => array('leaflet_framework', 'ViewPlugin'),
     'logical' => 'LF.Plugin.View',
-    'center' => array(0.0, 0.0),
-    'zoom' => 3,
+    'defaults' => array(
+      'center' => array(
+        'lat' => 0.0,
+        'lon' => 0.0
+      ),
+      'zoom' => 3,
+      'auto' => NULL,
+    ),
   );
 
   /* Default map scale plugin.
@@ -235,15 +253,7 @@ function leaflet_framework_leaflet_framework_plugins() {
  * Declares: hook_leaflet_framework_maps().
  */
 function leaflet_framework_maps($name = NULL) {
-
-  // TODO: Add caching here.
-
   $maps = module_invoke_all('leaflet_framework_maps');
-
-  foreach ($maps as &$map) {
-    $map['defaults'] = isset($map['defaults']) ? $map['defaults'] : array();
-    $map['plugins'] = isset($map['plugins']) ? $map['plugins'] : array();
-  }
 
   if (empty($name)) {
     return $maps;
@@ -253,40 +263,57 @@ function leaflet_framework_maps($name = NULL) {
 }
 
 /**
- * Get a plugin
- * Declares: hook_leaflet_framework_plugin().
+ * Declares: hook_leaflet_framework_plugins().
  */
-function leaflet_framework_plugin($name = NULL) {
-
-  // TODO: Add caching here.
-
-  $plugins = module_invoke_all('leaflet_framework_plugins');
-
-  drupal_alter('leaflet_framework_plugins', $plugins);
-
-  if (empty($name)) {
+function _leaflet_framework_plugins($reset = FALSE) {
+  if (!($cache = cache_get('leaflet_framework:plugin_definitions')) || $reset) {
+    $plugins = module_invoke_all('leaflet_framework_plugins');
+    cache_set('leaflet_framework:plugin_definitions', $plugins);
     return $plugins;
   }
+  return $cache->data;
+}
 
-  return isset($plugins[$name]) ? $plugins[$name] : FALSE;
+/**
+ * Get a plugin
+ */
+function leaflet_framework_plugin($name, $settings = NULL) {
+  $plugins = _leaflet_framework_plugins();
+  if (!isset($plugins[$name])) {
+    throw new Exception("Unknown plugin definition '$name'");
+  }
+
+  // TODO: Evaluate whether this is needed anymore.
+  drupal_alter('leaflet_framework_plugins', $plugins);
+
+  $plugin = $plugins[$name];
+
+  // Only use defaults if *nothing* is provided.
+  if (is_null($settings)) {
+    $settings = isset($plugin['defaults']) ? $plugin['defaults'] : array();
+  }
+
+  $settings['library'] = $plugin['library'];
+
+  if (isset($plugin['logical'])) {
+    $settings['logical'] = $plugin['logical'];
+  }
+
+  return new GenericPlugin($settings);
 }
 
 /**
  * Create a Leaflet map.
  */
-function leaflet_framework_map($id = 'default', $plugins = array(), $defaults = array()) {
-  $map = leaflet_framework_maps($id);
-
-  // Use default map plugins if no none are provided.
+function leaflet_framework_map($map_id, $extensions = array(), $defaults = array()) {
+  $map = MapManager::get($map_id);
   if (!$map) {
-    $map = leaflet_framework_maps('default');
+    $map = leaflet_framework_default_map();
+    MapManager::register($map_id, $map);
   }
 
-  $defaults = array_merge($map['defaults'], $defaults);
-  $plugins = array_merge($map['plugins'], $plugins);
-
-  foreach ($plugins as $name => $options) {
-    leaflet_framework_extend_map($name, $id, $options);
+  foreach ($extensions as $plugin_name => $options) {
+    leaflet_framework_extend_map($plugin_name, $map_id, $options);
   }
 
   return array(
@@ -296,47 +323,46 @@ function leaflet_framework_map($id = 'default', $plugins = array(), $defaults = 
       ),
       'js' =>  array(
         array('data' => array(
-          'leaflet_framework' => array($id => array(
-            'defaults' => $defaults,
-            'plugins' => array()
-          )),
+          'leaflet_framework' => array($map_id => array()),
         ), 'type' => 'setting'),
       ),
     ),
-    '#height' => $defaults['height'],
     '#theme' => 'lf_map',
-    '#map_id' => $id
+    //'#height' => $map-> // TODO: Figure out where height comes from.
+    '#map_id' => $map_id
   );
 }
 
+function leaflet_framework_extend_map($plugin, $map_id, $extension = array()) {
+  $map = MapManager::get($map_id);
+  $map->extend($plugin, $extension);
+  if ($map->isRendered()) {
+    // TODO: Set $map_id in map constructor.
+    _leaflet_framework_flush_extensions($map_id, $map);
+  }
+}
+
 /**
- * Register additional plugins against a specific map.
+ *
  */
-function leaflet_framework_extend_map($name, $map_id, $options = array()) {
-  $plugin = leaflet_framework_plugin($name);
-  if (empty($plugin)) return;
+function _leaflet_framework_flush_extensions($map_id, $map) {
+  $plugins = $map->render();
 
-  $library = $plugin['library'];
-  unset($plugin['library']);
-
-  $options = array_merge($plugin, $options);
-
-  // Give the module declaring the plugin a final say on the options passed 
-  // into it.
-  if (isset($plugin['preprocess callbacks']) && !empty($plugin['preprocess callbacks'])) {
-    foreach ($plugin['preprocess callbacks'] as $preprocess) {
-      $preprocess($options);
+  // Ensure all required libraries are included.
+  foreach ($map->plugins() as $name => $plugin) {
+    $library = $plugin->library();
+    drupal_add_library($library[0], $library[1]);
+    if (isset($library[2])) {
+      $plugins[$name]['logical'] = $library[2];
     }
-    unset($plugin['preprocess callbacks']);
   }
 
-  drupal_add_library($library[0], $library[1]);
+  // error_log("leaflet_framework_preprocess_lf_map() $map_id " . print_r($plugins, 1));
 
-  if (!empty($options) && isset($options['logical'])) {
-    drupal_add_js(array('leaflet_framework' => array(
-      $map_id => array(
-        'plugins' => array($name => $options),
-      ),
-    )), 'setting');
-  }
+  drupal_add_js(array('leaflet_framework' => array(
+    $map_id => array(
+      'defaults' => $map->defaults(),
+      'plugins' => $plugins,
+    ),
+  )), 'setting');
 }

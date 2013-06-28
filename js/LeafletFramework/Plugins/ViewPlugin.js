@@ -8,7 +8,7 @@ LF.Plugin.View = LF.Plugin.extend({
             map.options.maxZoom = this.options.maxZoom;
         }
 
-        if ('auto' in this.options) {
+        if ('auto' in this.options && this.options.auto) {
             var extent = this.options.auto;
             view.fit([
                 [extent.maxy, extent.maxx],
@@ -18,7 +18,7 @@ LF.Plugin.View = LF.Plugin.extend({
         else if ('center' in this.options) {
             var center = this.options.center,
                 zoom = this.options.zoom;
-            view.set(center, zoom);
+            view.set([center.lat, center.lon], zoom);
         }
 
         map.on('popupopen', function (e) {

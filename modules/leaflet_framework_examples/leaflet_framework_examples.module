@@ -56,7 +56,7 @@ function leaflet_framework_examples_menu() {
 function leaflet_framework_examples_library() {
   $libraries = array();
   $path = drupal_get_path('module', 'leaflet_framework_examples');
-  $leaflet_hash_path = libraries_get_path('leaflet-hash');
+  $leaflet_hash_path = "$path/js/vendor";
 
   $libraries['header'] = array(
     'title' => 'Leaflet Framework examples header file',
@@ -87,15 +87,17 @@ function leaflet_framework_examples_library() {
 /**
  * Implements hook_leaflet_framework_plugin().
  */
-function leaflet_framework_examples_leaflet_framework_plugin() {
+function leaflet_framework_examples_leaflet_framework_plugins() {
   $plugins = array();
 
   // Leaflet-hash plugin (https://github.com/mlevans/leaflet-hash/network).
   $plugins['hash'] = array(
     'library' => array('leaflet_framework_examples', 'leaflet-hash'),
     'logical' => 'LFE.Plugin.Hash',
-    'center' => array(0.0, 0.0),
-    'zoom' => 5,
+    'defaults' => array(
+      'center' => array(0.0, 0.0),
+      'zoom' => 5,
+    ),
   );
 
   return $plugins;
