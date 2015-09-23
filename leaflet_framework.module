@@ -31,18 +31,15 @@ function leaflet_framework_libraries_info() {
       'name' => 'Leaflet',
       'vendor url' => 'https://github.com/affinitybridge/leaflet_framework',
       'download url' => 'git@github.com:affinitybridge/leaflet_framework.git',
-      'path' => 'dist',
-      'version' => '0.5.1',
+      'version' => '0.7.5',
       'files' => array(
         'js' => array(
-          'leaflet-src.js',
+          'leaflet-src.js' => array(),
         ),
         'css' => array(
-          'leaflet.css' => array(),
-          'leaflet.ie.css' => array(
+          'leaflet.css' => array(
             'type' => 'file',
             'media' => 'screen',
-            'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE),
           ),
         ),
       ),
@@ -62,7 +59,7 @@ function leaflet_framework_library() {
     $leaflet_path = base_path() . libraries_get_path('leaflet');
     $libraries['Leaflet']['js'][] = array(
       'type' => 'inline',
-      'data' => "L.Icon.Default.imagePath = '$leaflet_path/dist/images';",
+      'data' => "L.Icon.Default.imagePath = '$leaflet_path/images';",
       'group' => JS_LIBRARY,
       'preprocess' => FALSE
     );
